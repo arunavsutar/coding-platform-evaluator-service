@@ -1,12 +1,13 @@
 import express from "express";
 import serverConfig from "./config/server.config";
+import apirouter from "./routes";
 
-const apps = express();
+const app = express();
+
+app.use('/api', apirouter);
 
 
-
-
-apps.listen(serverConfig.PORT, () => {
+app.listen(serverConfig.PORT, () => {
     console.log(`Server started at *:${serverConfig.PORT}`);
     console.log("Helllo");
 });
