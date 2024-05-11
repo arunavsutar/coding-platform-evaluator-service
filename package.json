@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@bull-board/ui": "^5.17.1",
     "@types/ioredis": "^5.0.0",
     "bullmq": "^5.7.8",
     "concurrently": "^8.2.2",

@@ -14,9 +14,15 @@ app.listen(serverConfig.PORT, () => {
     console.log("Helllo");
     SampleWorker('SampleQueue');
     sampleQueueProducer('SampleJob', {
-        name: "Arunav",
+        name: "Deepak",
         company: "Microsoft",
         position: "SDE 1",
         location: "Remote | Noida"
-    });
+    }, 2);
+    sampleQueueProducer('SampleJob', {
+        name: "Arunav",
+        company: "Google",
+        position: "SDE 1",
+        location: "Remote | BLR"
+    }, 1);
 });
