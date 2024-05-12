@@ -4,8 +4,14 @@ import serverConfig from "./config/server.config";
 import apirouter from "./routes";
 import sampleQueueProducer from "./producers/sample.queue.producer";
 import { SampleWorker } from "./workers/sample.worker";
+import bodyParser from "body-parser";
+
 
 const app = express();
+
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
+app.use(bodyParser.text());
 app.use('/api', apirouter);
 app.use('/admin/queues', serverAdapter.getRouter());
 
