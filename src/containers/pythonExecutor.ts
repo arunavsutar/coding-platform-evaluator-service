@@ -7,10 +7,12 @@ import pullImage from './pullContainer';
 import codeExecutorStrategy, { ExecutionResponse } from '../types/codeExecutor.strategy';
 
 class PythonExecutor implements codeExecutorStrategy {
-    async execute(code: string, inputTestCase: string): Promise<ExecutionResponse> {
+    async execute(code: string, inputTestCase: string, outputTestCase: string): Promise<ExecutionResponse> {
         const rawLogBuffer: Buffer[] = [];
         console.log("Initialising a new Python Docker Container.");
         await pullImage(PYTHON_IMAGE);
+        console.log("inputTestcase =>", inputTestCase);
+        console.log("outputTestcase =>", outputTestCase);
         //       /bin/sh is used to not explicitly make it executable file using chmod.
         // We can directly run that. Just execute a bash script and -c for telling not from any file from the string.
 

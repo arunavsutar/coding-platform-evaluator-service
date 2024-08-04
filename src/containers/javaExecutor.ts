@@ -5,10 +5,12 @@ import decodeBufferString from "./dockerHelper";
 import pullImage from "./pullContainer";
 
 class JavaExecutor implements codeExecutorStrategy {
-    async execute(code: string, inputTestCase: string): Promise<ExecutionResponse> {
+    async execute(code: string, inputTestCase: string, outputTestCase: string): Promise<ExecutionResponse> {
         const rawLogBuffer: Buffer[] = [];
         console.log("Initialising a new Java Container.");
         await pullImage(JAVA_IMAGE);
+        console.log("inputTestcase =>", inputTestCase);
+        console.log("outputTestcase =>", outputTestCase);
         const runCommand = `echo '${code.replace(/'/g, `'\\"`)}' > Main.java && javac Main.java && echo '${inputTestCase.replace(/'/g, `'\\"`)}' | java Main`
         console.log(runCommand);
 
@@ -28,8 +30,18 @@ class JavaExecutor implements codeExecutorStrategy {
         });
         try {
             const codeResponse: string = await this.fetchDecodedStream(loggerstream, rawLogBuffer);
-            return { output: codeResponse, status: "COMPLETED" };
+            if (codeResponse.trim() === outputTestCase.trim()) {
+
+                return { output: codeResponse, status: "SUCCESS" };
+            }
+            else {
+                return { output: codeResponse, status: "WA" };
+            }
         } catch (error) {
+            console.log(error);
+            if (error === 'TLE') {
+                await javaDockerContainer.kill();
+            }
             return { output: error as string, status: "ERROR" };
         } finally {
 
@@ -41,7 +53,12 @@ class JavaExecutor implements codeExecutorStrategy {
 
     fetchDecodedStream(loggerstream: NodeJS.ReadableStream, rawLogBuffer: Buffer[]): Promise<string> {
         return new Promise((res, rej) => {
+            const timeout = setTimeout(() => {
+                console.log("Time Out Called");
+                rej("TLE");
+            }, 2000);
             loggerstream.on('end', () => {
+                clearTimeout(timeout);
                 console.log(rawLogBuffer);
                 const completeBuffer = Buffer.concat(rawLogBuffer);
                 const decodedStream = decodeBufferString(completeBuffer);
