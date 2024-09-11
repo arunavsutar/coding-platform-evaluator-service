@@ -4,6 +4,7 @@ import createContainer from './containerFactory';
 import { PYTHON_IMAGE } from '../utils/constants';
 import decodeBufferString from './dockerHelper';
 import pullImage from './pullContainer';
+import fetchDecodedStream from "../utils/fetch.decoded.stream";
 import codeExecutorStrategy, { ExecutionResponse } from '../types/codeExecutor.strategy';
 
 class PythonExecutor implements codeExecutorStrategy {
@@ -35,7 +36,7 @@ class PythonExecutor implements codeExecutorStrategy {
             rawLogBuffer.push(chunk);
         });
         try {
-            const codeResponse: string = await this.fetchDecodedStream(loggerstream, rawLogBuffer);
+            const codeResponse: string = await fetchDecodedStream(loggerstream, rawLogBuffer);
             return { output: codeResponse, status: "COMPLETED" };
         } catch (error) {
             return { output: error as string, status: "ERROR" };
@@ -45,26 +46,6 @@ class PythonExecutor implements codeExecutorStrategy {
         }
 
         //return codeResponse;
-    }
-
-    fetchDecodedStream(loggerstream: NodeJS.ReadableStream, rawLogBuffer: Buffer[]): Promise<string> {
-        return new Promise((res, rej) => {
-            loggerstream.on('end', () => {
-                console.log(rawLogBuffer);
-                const completeBuffer = Buffer.concat(rawLogBuffer);
-                const decodedStream = decodeBufferString(completeBuffer);
-                console.log("stdout =");
-                console.log(decodedStream.stdout);
-                console.log("stderr =\n", decodedStream.stderr);
-                if (decodedStream.stdout) {
-                    res(decodedStream.stdout);
-                }
-                else {
-
-                    rej(decodedStream.stderr);
-                }
-            });
-        });
     }
 }
 

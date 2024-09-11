@@ -1,7 +1,7 @@
 import codeExecutorStrategy, { ExecutionResponse } from "../types/codeExecutor.strategy";
 import { CPP_IMAGE } from "../utils/constants";
 import createContainer from "./containerFactory";
-import decodeBufferString from "./dockerHelper";
+import fetchDecodedStream from "../utils/fetch.decoded.stream";
 import pullImage from "./pullContainer";
 
 class CppExecutor implements codeExecutorStrategy {
@@ -10,8 +10,8 @@ class CppExecutor implements codeExecutorStrategy {
         console.log("Initialising a new CPP Container.");
         await pullImage(CPP_IMAGE);
         console.log("inputTestcase =>", inputTestCase);
-        console.log("outputTestcase =>",outputTestCase);
-        
+        console.log("outputTestcase =>", outputTestCase);
+
 
         const runCommand = `echo '${code.replace(/'/g, `'\\"`)}' > main.cpp && g++ main.cpp -o main && echo '${inputTestCase.replace(/'/g, `'\\"`)}' | stdbuf -oL -eL ./main`
         console.log(runCommand);
@@ -27,13 +27,30 @@ class CppExecutor implements codeExecutorStrategy {
             follow: true     //whether the logs are streamed or returned as a string
         });
         // We can attach events on the stream object to start and stop reading.
+        // console.time('operationTime');
         loggerstream.on('data', (chunk) => {
             rawLogBuffer.push(chunk);
         });
         try {
-            const codeResponse: string = await this.fetchDecodedStream(loggerstream, rawLogBuffer);
-            return { output: codeResponse, status: "COMPLETED" };
+            const codeResponse: string = await fetchDecodedStream(loggerstream, rawLogBuffer);
+            if (codeResponse.trim() === outputTestCase.trim()) {
+                return { output: codeResponse, status: "Success" };
+            }
+            else {
+                return { output: codeResponse, status: "WA" };
+            }
+
         } catch (error) {
+            console.log("Error Ocuured", error);
+
+            if (error === "TLE") {
+                console.log("Before killing the container.");
+
+                await cppDockerContainer.kill();
+
+                console.log("After killing the container.");
+            }
+
             return { output: error as string, status: "ERROR" };
         } finally {
 
@@ -43,25 +60,7 @@ class CppExecutor implements codeExecutorStrategy {
         //return codeResponse;
     }
 
-    fetchDecodedStream(loggerstream: NodeJS.ReadableStream, rawLogBuffer: Buffer[]): Promise<string> {
-        return new Promise((res, rej) => {
-            loggerstream.on('end', () => {
-                console.log(rawLogBuffer);
-                const completeBuffer = Buffer.concat(rawLogBuffer);
-                const decodedStream = decodeBufferString(completeBuffer);
-                console.log("stdout =");
-                console.log(decodedStream.stdout);
-                console.log("stderr =\n", decodedStream.stderr);
-                if (decodedStream.stdout) {
-                    res(decodedStream.stdout);
-                }
-                else {
-
-                    rej(decodedStream.stderr);
-                }
-            });
-        });
-    }
+    
 }
 
 export default CppExecutor;

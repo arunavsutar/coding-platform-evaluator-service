@@ -10,7 +10,7 @@ async function createContainer(imageName: string, cmdExecutable: string[]) {
         AttachStderr: true,//to enable error stream
         Tty: false,
         HostConfig: {
-            Memory: 1024 * 1024 * 1024 * 2, //2GB
+            Memory: 1024 * 1024 * 256 //256MB   And to check MLE
         },
         OpenStdin: true,//to keep the input stream Open even no interaction is there.
     })

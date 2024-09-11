@@ -1,5 +1,5 @@
 import Docker from "dockerode";
-export default function pullImage(imageName: string) {
+export default async function pullImage(imageName: string) {
     try {
         const docker = new Docker();
         return new Promise((res, rej) => {

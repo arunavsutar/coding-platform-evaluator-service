@@ -23,13 +23,19 @@ export default class SubmissionJob implements IJob {
             console.log("payload [key] = ", this.payload[key]);
             console.log("Language = ", codeLanguage);
             console.log("code = ", code);
+            console.log("THE Submission ID = ", this.payload[key].submissionId);
+
 
             const strategy: codeExecutorStrategy | null = createExecutor(codeLanguage);
             if (strategy !== null) {
 
                 const response: ExecutionResponse = await strategy.execute(code, inputCase, outputCase)
-                evaluationQueueProducer({ response, userId: this.payload[key].userId, submissionId: this.payload[key].submissionId });
-                if (response.status === 'SUCCESS') {
+                evaluationQueueProducer({
+                    response: response,
+                    userId: this.payload[key].userId,
+                    submissionId: this.payload[key].submissionId
+                });
+                if (response.status === 'Success') {
                     console.log("Code Executed Successfully.");
                     console.log(response);
                 }
